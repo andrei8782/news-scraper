@@ -4,6 +4,7 @@ from csv import DictWriter, writer
 from pathlib import Path
 from preprocessing import preprocess
 from sentiment_score import get_polarity
+import sys
 
 def scrape(in_file_path, out_file_path):
   article_count = 0
@@ -77,8 +78,21 @@ def create_csv(file_path):
     f.close()
 
 if __name__ == "__main__":
-  in_file_path = "output/bitcoinmagazine/sample_links.txt"
-  out_file_path = "output/bitcoinmagazine/articles.csv"
+  available_websites = ['bitcoinmagazine']
+
+  args = sys.argv
+  if len(args) == 1:
+    print("Please specify which website to scrape.")
+    sys.exit()
+  elif len(args) > 2:
+    print("Please specify a single website to scrape.")
+    sys.exit()
+  elif args[1] not in available_websites:
+    print("Website not supported yet.")
+    sys.exit()
+
+  in_file_path = "output/" + args[1] + "/sample_links.txt"
+  out_file_path = "output/" + args[1] + "/sample_articles.csv"
 
   if not Path(out_file_path).is_file():
     create_csv(out_file_path)
