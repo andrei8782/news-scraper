@@ -1,3 +1,6 @@
 .vscode
 .DS_Store
 output
+__pycache__/
+preprocessing.py
+sentiment_score.py
