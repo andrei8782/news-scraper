@@ -94,6 +94,10 @@ if __name__ == "__main__":
   in_file_path = "output/" + args[1] + "/sample_links.txt"
   out_file_path = "output/" + args[1] + "/sample_articles.csv"
 
+  if not Path(in_file_path).is_file():
+    print("Could not locate {}.".format(in_file_path))
+    sys.exit()
+
   if not Path(out_file_path).is_file():
     create_csv(out_file_path)
 
