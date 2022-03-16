@@ -6,23 +6,26 @@ from preprocessing import preprocess
 from sentiment_score import get_polarity
 import sys
 
-def scrape(in_file_path, out_file_path):
+def scrape(website_name):
+  in_file = "output/" + website_name + "/sample_links.txt"
+  out_file = "output/" + website_name + "/sample_articles.csv"
+
   article_count = 0
-  with open(in_file_path) as f:
+  with open(in_file) as f:
       for line in f:
           article_count += 1
           relative_url = line.strip()
           
-          with open(out_file_path) as out_file:
-            if relative_url in out_file.read():
+          with open(out_file) as of:
+            if relative_url in of.read():
               print("Article '{}' is already in csv file -- skipping.".format(relative_url))
               continue
       
-          article = scrape_article("bitcoinmagazine", relative_url)
+          article = scrape_article(website_name, relative_url)
           sentiment_score = get_polarity(article['content'])
           article['sentiment'] = sentiment_score
           article['content'] = " ".join(preprocess(article['content']))
-          append_to_csv(out_file_path, article)
+          append_to_csv(out_file, article)
 
 def scrape_article(website_name, article_url):
   if website_name == "bitcoinmagazine":
@@ -91,14 +94,15 @@ if __name__ == "__main__":
     print("Website not supported yet.")
     sys.exit()
 
-  in_file_path = "output/" + args[1] + "/sample_links.txt"
-  out_file_path = "output/" + args[1] + "/sample_articles.csv"
+  website_name = args[1]
+  in_file = "output/" + website_name + "/sample_links.txt"
+  out_file = "output/" + website_name + "/sample_articles.csv"
 
-  if not Path(in_file_path).is_file():
-    print("Could not locate {}.".format(in_file_path))
+  if not Path(in_file).is_file():
+    print("Could not locate {}.".format(in_file))
     sys.exit()
 
-  if not Path(out_file_path).is_file():
-    create_csv(out_file_path)
+  if not Path(out_file).is_file():
+    create_csv(out_file)
 
-  scrape(in_file_path, out_file_path)
+  scrape(website_name)
