@@ -1,10 +1,10 @@
 import requests
 from bs4 import BeautifulSoup
-from csv import DictWriter, writer
+from csv import DictWriter, writer, QUOTE_NONNUMERIC
 from pathlib import Path
-from preprocessing import preprocess
 from sentiment_score import get_polarity
 import sys
+from preprocess import preprocess
 
 def scrape(website_name):
   in_file = "output/" + website_name + "/sample_links.txt"
@@ -24,6 +24,7 @@ def scrape(website_name):
           article = scrape_article(website_name, relative_url)
           sentiment_score = get_polarity(article['content'])
           article['sentiment'] = sentiment_score
+          article['text'] = "".join(article['content'].splitlines())
           article['content'] = " ".join(preprocess(article['content']))
           append_to_csv(out_file, article)
 
@@ -67,14 +68,14 @@ def scrape_bitcoinmagazine(url):
   return article
 
 def append_to_csv(file_path, d):
-  csv_header = ['coin_type', 'url', 'title', 'content', 'published_at', 'source', 'sentiment']
+  csv_header = ['coin_type', 'url', 'title', 'content', 'published_at', 'source', 'sentiment', 'text']
   with open(file_path, 'a', newline='') as f_object:
-      dictwriter_object = DictWriter(f_object, fieldnames=csv_header)
+      dictwriter_object = DictWriter(f_object, fieldnames=csv_header, quotechar='"', quoting=QUOTE_NONNUMERIC)
       dictwriter_object.writerow(d)
       f_object.close()
 
 def create_csv(file_path):
-  csv_header = ['coin_type', 'url', 'title', 'content', 'published_at', 'source', 'sentiment']
+  csv_header = ['coin_type', 'url', 'title', 'content', 'published_at', 'source', 'sentiment', 'text']
   with open(file_path, 'w') as f:
     writer_object = writer(f)
     writer_object.writerow(csv_header)
