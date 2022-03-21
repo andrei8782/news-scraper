@@ -12,7 +12,8 @@ from random import randrange
 URL = "https://bitcoinmagazine.com/articles"
 
 chrome_options = Options() 
-chrome_options.add_experimental_option("detach", True)
+# chrome_options.add_experimental_option("detach", True)
+chrome_options.add_argument("--headless")
 browser = webdriver.Chrome(options=chrome_options)
 browser.get(URL)
 
@@ -37,7 +38,7 @@ def write_to_file(browser, pages):
     list = soup.find("phoenix-hub", class_="m-card-group--container")
 
     num = 0
-    with open("output/tmp.txt", "w") as file:
+    with open("output/bitcoinmagazine/tmp", "w") as file:
         for article in list.find_all("phoenix-super-link"):
             file.write(article['href'])
             file.write('\n')
