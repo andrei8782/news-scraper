@@ -5,9 +5,10 @@ from pathlib import Path
 from sentiment_score import get_polarity
 import sys
 from preprocess import preprocess
+import json
 
 def scrape(website_name):
-  in_file = "output/" + website_name + "/sample_links.txt"
+  in_file = "output/" + website_name + "/sample_links"
   out_file = "output/" + website_name + "/sample_articles.csv"
 
   article_count = 0
@@ -22,6 +23,10 @@ def scrape(website_name):
               continue
       
           article = scrape_article(website_name, relative_url)
+          if article is None:
+            print("\nArticle {} is empty.\n".format(relative_url))
+            continue
+
           sentiment_score = get_polarity(article['content'])
           article['sentiment'] = sentiment_score
           article['text'] = "".join(article['content'].splitlines())
@@ -32,14 +37,57 @@ def scrape_article(website_name, article_url):
   if website_name == "bitcoinmagazine":
     base_url = "https://bitcoinmagazine.com"
     return scrape_bitcoinmagazine(base_url + article_url)
-  
+  elif website_name == "cryptoglobe":
+    return scrape_cryptoglobe(article_url)
+
+def scrape_cryptoglobe(url):
+  page = requests.get(url)
+  soup = BeautifulSoup(page.content, "html.parser")
+  coin_type = "N/A"
+
+  title_container = soup.find("h1", class_="u-heading-v3__title")
+  title = title_container.text if title_container else ''
+
+  article_div = soup.find("article", class_="article-container")
+  body = ''
+  for x in article_div.find_all(["p", "ul", "h3", "h2", "footer"]):
+    if x.name == "ul":
+      for li in x.find_all("li"):
+        li_string = " ".join(li.text.split())
+        body += (li_string + " ")
+    else:
+      body += " ".join(x.text.split()) + ' '
+    body += "\n"
+
+  print(body)
+
+  date_script_container = soup.find('script', type='application/ld+json')
+  date_script = date_script_container.text if date_script_container else 'N\A'
+  date = 'N\A'
+  if date_script != 'N\A':
+    loaded_date_script = json.loads(date_script)
+    if 'datePublished' in loaded_date_script:
+      date = loaded_date_script['datePublished'][:10]
+
+  source = "cryptoglobe"
+
+  article = {'coin_type': coin_type, 
+             'url': url,
+             'title': title,
+             'content': body,
+             'published_at': date,
+             'source': source
+             }
+  return article
+
 def scrape_bitcoinmagazine(url):
   page = requests.get(url)
   soup = BeautifulSoup(page.content, "html.parser")
 
   coin_type = "bitcoin"
 
-  title = soup.find("h1", class_="m-detail-header--title").text
+  title_container = soup.find("h1", class_="m-detail-header--title")
+  title = title_container.text if title_container else ''
 
   summary_container = soup.find("div", class_="m-detail-header--dek")
   summary = summary_container.text if summary_container else ''
@@ -50,12 +98,17 @@ def scrape_bitcoinmagazine(url):
   for x in article_div.find_all(["p", "ul", "h2"]):
     if x.name == "ul":
       for li in x.find_all("li"):
-        body += (li.text + "; ")
+        li_string = " ".join(li.text.split())
+        body += (li_string + " ")
     else:
-      body += x.text
+      body += " ".join(x.text.split()) + ' '
     body += "\n"
 
-  date = soup.find("time")['datetime'][:10]
+  date = 'N\A'
+  date_container = soup.find("time")
+  if date_container:
+    date = date_container['datetime'][:10]
+
   source = "bitcoinmagazine"
 
   article = {'coin_type': coin_type, 
@@ -82,7 +135,7 @@ def create_csv(file_path):
     f.close()
 
 if __name__ == "__main__":
-  available_websites = ['bitcoinmagazine']
+  available_websites = ['bitcoinmagazine', 'cryptoglobe']
 
   args = sys.argv
   if len(args) == 1:
@@ -96,7 +149,7 @@ if __name__ == "__main__":
     sys.exit()
 
   website_name = args[1]
-  in_file = "output/" + website_name + "/sample_links.txt"
+  in_file = "output/" + website_name + "/sample_links"
   out_file = "output/" + website_name + "/sample_articles.csv"
 
   if not Path(in_file).is_file():
