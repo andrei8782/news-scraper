@@ -1,5 +1,6 @@
 from cryptoglobe_scraper import CryptoglobeScraper
 from bitcoinmagazine_scraper import BitcoinmagazineScraper
+from articles import ArticleScraper
 import sys
 import signal
 import argparse
@@ -47,11 +48,15 @@ class ScrapeController():
         self.article_limit = args.limit
         self.ignore_overlap = args.ignore_overlap
     
-    def run(self):
+    def scrape_links(self):
         if self.link_scraper:
             self.link_scraper.scrape_links()
-
+    
+    def scrape_articles(self):
+        article_scraper = ArticleScraper(self.website)
+        article_scraper.scrape()
 
 if __name__ == '__main__':
     scrape_controller = ScrapeController()
-    scrape_controller.run()
+    scrape_controller.scrape_links()
+    scrape_controller.scrape_articles()
