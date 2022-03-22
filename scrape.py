@@ -1,4 +1,3 @@
-from xmlrpc.client import Boolean
 from cryptoglobe_scraper import CryptoglobeScraper
 from bitcoinmagazine_scraper import BitcoinmagazineScraper
 import sys
