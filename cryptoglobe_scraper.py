@@ -15,15 +15,15 @@ class CryptoglobeScraper(LinkScraper):
     def parse_links(self):
         soup = BeautifulSoup(self.browser.page_source, "html.parser")
         list = soup.find_all("div", class_="item-news ng-scope") 
-        new_links = []     
+        links = []     
         for div in list:
             heading = div.find("h3")
             link = heading.find("a", class_="ng-binding")['href']
             if link == '':
                 continue
             else:
-                new_links.append(link)
-        return new_links
+                links.append(link)
+        return links
 
     def reached_end_of_webpage(self):
         if self.current_height == self.last_height:
