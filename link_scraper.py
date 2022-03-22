@@ -16,9 +16,6 @@ class LinkScraper:
         chrome_options.add_argument("--headless")
         self.browser = webdriver.Chrome(options=chrome_options)
         self.browser.get(self.url)
-        
-        self.last_height = 0
-        self.current_height = self.browser.execute_script("return document.body.scrollHeight")
         self.page_num = 1
 
     def setup_paths(self, website):
@@ -48,6 +45,9 @@ class LinkScraper:
             print("Page {} loaded.".format(self.page_num))
 
             links = self.parse_links()
+            if links is None:
+                print("No links could be parsed. Aborting.")
+                break
             print("{} links have been parsed.".format(len(links)))
             # print("Links on page {} are:\n{}".format(self.page_num, links))
             LinkScraper.clear_file(self.tmp_filepath)

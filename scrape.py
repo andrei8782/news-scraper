@@ -5,7 +5,7 @@ import signal
 import argparse
 
 class ScrapeController():
-    available_websites = ['cryptoglobe']
+    available_websites = ['bitcoinmagazine', 'cryptoglobe']
 
     def __init__(self) -> None:
         signal.signal(signal.SIGINT, self.handler)
@@ -13,7 +13,7 @@ class ScrapeController():
         self.parse_args()
 
         if not self.is_website_compatible():
-            print("Website not supported yet. Exiting.\n")
+            print("Website not supported yet.")
             print("Available websites: {}.".format(self.available_websites))
             sys.exit()
 
