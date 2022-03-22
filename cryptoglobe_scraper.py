@@ -5,7 +5,9 @@ from link_scraper import LinkScraper
 class CryptoglobeScraper(LinkScraper):
     def __init__(self, article_limit=None, ignore_overlap=False) -> None:
         super().__init__("cryptoglobe", article_limit, ignore_overlap)
-
+        self.last_height = 0
+        self.current_height = self.browser.execute_script("return document.body.scrollHeight")
+        
     def render_page(self):
         self.last_height = self.current_height
         self.browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
