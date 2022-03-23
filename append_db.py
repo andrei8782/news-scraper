@@ -1,0 +1,1 @@
+# append articles.csv to gcp db
