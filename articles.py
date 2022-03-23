@@ -12,6 +12,7 @@ class ArticleScraper:
     self.website = website
     self.in_file = in_file
     self.out_file = out_file
+    self.links_path = "output/" + self.website + "/links"
 
     if not Path(self.in_file).is_file():
       print("Could not locate {}.".format(self.in_file))
@@ -21,22 +22,21 @@ class ArticleScraper:
       ArticleScraper.create_csv(self.out_file)
 
   def scrape(self):
-    article_count = 0
+    self.article_count = 0
     with open(self.in_file, 'r') as f:
         for line in f:
-            article_count += 1
             article_url = line.strip()
             
-            with open(self.out_file, 'r') as of:
+            with open(self.links_path, 'r') as of:
               if article_url in of.read():
-                # print("Article '{}' is already in csv file -- skipping.".format(article_url))
+                # print("Article '{}' is already in links file -- skipping.".format(article_url))
                 continue
-        
             article = ArticleScraper.scrape_article(self.website, article_url)
             if article is None:
               print("\nArticle {} is empty.\n".format(article_url))
               continue
 
+            self.article_count += 1
             sentiment_score = get_polarity(article['content'])
             article['sentiment'] = sentiment_score
             article['text'] = "".join(article['content'].splitlines())
@@ -60,14 +60,15 @@ class ArticleScraper:
 
     article_div = soup.find("article", class_="article-container")
     body = ''
-    for x in article_div.find_all(["p", "ul", "h3", "h2", "footer"]):
-      if x.name == "ul":
-        for li in x.find_all("li"):
-          li_string = " ".join(li.text.split())
-          body += (li_string + " ")
-      else:
-        body += " ".join(x.text.split()) + ' '
-      body += "\n"
+    if article_div:
+      for x in article_div.find_all(["p", "ul", "h3", "h2", "footer"]):
+        if x.name == "ul":
+          for li in x.find_all("li"):
+            li_string = " ".join(li.text.split())
+            body += (li_string + " ")
+        else:
+          body += " ".join(x.text.split()) + ' '
+        body += "\n"
 
     date_script_container = soup.find('script', type='application/ld+json')
     date_script = date_script_container.text if date_script_container else 'N\A'

@@ -5,6 +5,7 @@ from link_scraper import LinkScraper
 import sys
 import signal
 import argparse
+from append_db import DatabaseController
 
 class ScrapeController():
     available_websites = ['bitcoinmagazine', 'cryptoglobe']
@@ -60,17 +61,18 @@ class ScrapeController():
     def scrape_links_locally(self):
         if self.link_scraper:
             self.link_scraper.scrape_links()
-            self.link_scraper.merge_files()
+            # self.link_scraper.merge_files()
             self.link_scraper.browser.quit()
-            LinkScraper.remove_file(self.tmp_links_path)
+            # LinkScraper.remove_file(self.tmp_links_path)
     
     def scrape_articles(self, in_file, out_file):
         article_scraper = ArticleScraper(self.website, in_file, out_file)
         article_scraper.scrape()
+        print("Scraped {} articles.".format(article_scraper.article_count))
 
     def scrape_locally(self):
-        self.scrape_links_locally()
-        self.scrape_articles(in_file=self.links_path, out_file=self.articles_path)
+        # self.scrape_links_locally()
+        self.scrape_articles(in_file=self.tmp_links_path, out_file=self.articles_path)
 
     def refresh(self):
         print("Refreshing the database...")
@@ -80,13 +82,13 @@ class ScrapeController():
 
             self.scrape_articles(in_file=self.tmp_links_path, out_file=self.tmp_articles_path)
 
-            # TODO: update database
-            # if successful database update, merge_files()
-
-            self.link_scraper.merge_files()
-            print("tmp_links->{}".format(self.tmp_links_path))
+            db_controller = DatabaseController()
+            append_successful = db_controller.append_to_db(self.tmp_articles_path)
+            if append_successful:
+                self.link_scraper.merge_files()
+            
             LinkScraper.remove_file(self.tmp_links_path)
-            # self.link_scraper.remove_file(self.tmp_articles_path)
+            LinkScraper.remove_file(self.tmp_articles_path) 
         else:
             print("link_scraper object is not instantiated.")
 
