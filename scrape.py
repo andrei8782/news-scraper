@@ -1,6 +1,7 @@
 from cryptoglobe_scraper import CryptoglobeScraper
 from bitcoinmagazine_scraper import BitcoinmagazineScraper
 from articles import ArticleScraper
+from link_scraper import LinkScraper
 import sys
 import signal
 import argparse
@@ -23,11 +24,17 @@ class ScrapeController():
             self.link_scraper = CryptoglobeScraper(self.article_limit, self.ignore_overlap)
         elif self.website == 'bitcoinmagazine':
             self.link_scraper = BitcoinmagazineScraper(self.article_limit, self.ignore_overlap)
+        
+        self.tmp_articles_path = "output/" + self.website + "/tmp_articles.csv"
+        self.tmp_links_path = "output/" + self.website + "/tmp_links"
+        self.articles_path = "output/" + self.website + "/articles.csv"
+        self.links_path = "output/" + self.website + "/links"
 
     def handler(self, signum, frame):
         print("Ctrl-c was pressed. Saving links and exiting without removing tmp_links.")
         if self.link_scraper:
             self.link_scraper.merge_files()
+            self.link_scraper.browser.quit()
         sys.exit()
 
     def is_website_compatible(self):
@@ -41,22 +48,51 @@ class ScrapeController():
         parser.add_argument('-w', '--website', type=str, required=True, help="Website name")
         parser.add_argument('-l', '--limit', type=int, help="Article limit")
         parser.add_argument('-i', '--ignore_overlap', action='store_true', help="Ignore overlapping articles already present in links")
+        parser.add_argument('-r', '--refresh', action='store_true', help="Indicate refresh functionality")
         # parser.add_argument('--speed', type=str, required=False)
 
         args = parser.parse_args()
         self.website = args.website
         self.article_limit = args.limit
         self.ignore_overlap = args.ignore_overlap
+        self.refresh_flag = args.refresh
     
-    def scrape_links(self):
+    def scrape_links_locally(self):
         if self.link_scraper:
             self.link_scraper.scrape_links()
+            self.link_scraper.merge_files()
+            self.link_scraper.browser.quit()
+            LinkScraper.remove_file(self.tmp_links_path)
     
-    def scrape_articles(self):
-        article_scraper = ArticleScraper(self.website)
+    def scrape_articles(self, in_file, out_file):
+        article_scraper = ArticleScraper(self.website, in_file, out_file)
         article_scraper.scrape()
+
+    def scrape_locally(self):
+        self.scrape_links_locally()
+        self.scrape_articles(in_file=self.links_path, out_file=self.articles_path)
+
+    def refresh(self):
+        print("Refreshing the database...")
+        if self.link_scraper:
+            self.link_scraper.scrape_links()
+            self.link_scraper.browser.quit()
+
+            self.scrape_articles(in_file=self.tmp_links_path, out_file=self.tmp_articles_path)
+
+            # TODO: update database
+            # if successful database update, merge_files()
+
+            self.link_scraper.merge_files()
+            print("tmp_links->{}".format(self.tmp_links_path))
+            LinkScraper.remove_file(self.tmp_links_path)
+            # self.link_scraper.remove_file(self.tmp_articles_path)
+        else:
+            print("link_scraper object is not instantiated.")
 
 if __name__ == '__main__':
     scrape_controller = ScrapeController()
-    scrape_controller.scrape_links()
-    scrape_controller.scrape_articles()
+    if scrape_controller.refresh_flag:
+        scrape_controller.refresh()
+    else:
+        scrape_controller.scrape_locally()

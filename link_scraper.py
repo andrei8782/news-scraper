@@ -69,15 +69,7 @@ class LinkScraper:
             self.render_page()
             self.page_num += 1
             # print("DEBUG:\nreached end of page: {}\nlink_overlap: {}\narticle_limit_reached: {}.\n".format(self.reached_end_of_webpage(), link_overlap, article_limit_reached))
-        
-        self.merge_files()
-        # TODO: update database
-        LinkScraper.remove_file(self.tmp_filepath)
-
-    def append_to_file(file_path, str):
-        with open(file_path, "a") as f:
-            f.write(str + '\n')
-
+    
     def merge_files(self):
         merged_lines = 0
         with open(self.links_filepath, "a") as lf:
@@ -86,7 +78,7 @@ class LinkScraper:
                     lf.write(line)
                     merged_lines += 1
         print("Merged {} into {}.\n{} links added.".format(self.tmp_filepath, self.links_filepath, merged_lines))
-
+    
     def remove_file(file_path, silent=False):
         if os.path.exists(file_path):
             os.remove(file_path)
@@ -98,3 +90,7 @@ class LinkScraper:
     def clear_file(file_path):
         with open(file_path,'w') as f:
             pass
+    
+    def append_to_file(file_path, str):
+        with open(file_path, "a") as f:
+            f.write(str + '\n')

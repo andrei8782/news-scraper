@@ -8,10 +8,10 @@ from preprocess import preprocess
 import json
 
 class ArticleScraper:
-  def __init__(self, website) -> None:
+  def __init__(self, website, in_file, out_file) -> None:
     self.website = website
-    self.in_file = "output/" + self.website + "/links"
-    self.out_file = "output/" + self.website + "/articles.csv"
+    self.in_file = in_file
+    self.out_file = out_file
 
     if not Path(self.in_file).is_file():
       print("Could not locate {}.".format(self.in_file))
@@ -29,7 +29,7 @@ class ArticleScraper:
             
             with open(self.out_file, 'r') as of:
               if article_url in of.read():
-                print("Article '{}' is already in csv file -- skipping.".format(article_url))
+                # print("Article '{}' is already in csv file -- skipping.".format(article_url))
                 continue
         
             article = ArticleScraper.scrape_article(self.website, article_url)
@@ -41,6 +41,8 @@ class ArticleScraper:
             article['sentiment'] = sentiment_score
             article['text'] = "".join(article['content'].splitlines())
             article['content'] = " ".join(preprocess(article['content']))
+            if article['text'] == "" or article['published_at'] == "N\A":
+              continue
             ArticleScraper.append_to_csv(self.out_file, article)
 
   def scrape_article(website_name, article_url):
@@ -52,7 +54,6 @@ class ArticleScraper:
   def scrape_cryptoglobe(url):
     page = requests.get(url)
     soup = BeautifulSoup(page.content, "html.parser")
-    coin_type = "N/A"
 
     title_container = soup.find("h1", class_="u-heading-v3__title")
     title = title_container.text if title_container else ''
@@ -78,8 +79,7 @@ class ArticleScraper:
 
     source = "cryptoglobe"
 
-    article = {'coin_type': coin_type, 
-              'url': url,
+    article = {'url': url,
               'title': title,
               'content': body,
               'published_at': date,
@@ -90,8 +90,6 @@ class ArticleScraper:
   def scrape_bitcoinmagazine(url):
     page = requests.get(url)
     soup = BeautifulSoup(page.content, "html.parser")
-
-    coin_type = "bitcoin"
 
     title_container = soup.find("h1", class_="m-detail-header--title")
     title = title_container.text if title_container else ''
@@ -118,8 +116,7 @@ class ArticleScraper:
 
     source = "bitcoinmagazine"
 
-    article = {'coin_type': coin_type, 
-              'url': url,
+    article = {'url': url,
               'title': title,
               'content': body,
               'published_at': date,
@@ -128,14 +125,14 @@ class ArticleScraper:
     return article
 
   def append_to_csv(file_path, d):
-    csv_header = ['coin_type', 'url', 'title', 'content', 'published_at', 'source', 'sentiment', 'text']
+    csv_header = ['url', 'title', 'content', 'published_at', 'source', 'sentiment', 'text']
     with open(file_path, 'a', newline='') as f_object:
         dictwriter_object = DictWriter(f_object, fieldnames=csv_header, quotechar='"', quoting=QUOTE_NONNUMERIC)
         dictwriter_object.writerow(d)
         f_object.close()
 
   def create_csv(file_path):
-    csv_header = ['coin_type', 'url', 'title', 'content', 'published_at', 'source', 'sentiment', 'text']
+    csv_header = ['url', 'title', 'content', 'published_at', 'source', 'sentiment', 'text']
     with open(file_path, 'w') as f:
       writer_object = writer(f)
       writer_object.writerow(csv_header)
