@@ -1,8 +1,8 @@
 # news-scraper
 
 ## refresh commands
-python3 scrape.py -w bitcoinmagazine -r
-python3 scrape.py -w cryptoglobe -r
+```python3 scrape.py -w bitcoinmagazine -r``` \
+```python3 scrape.py -w cryptoglobe -r```
 
 ## output format
 The output files described below will be generated in ```output/$website_name/``` for each scraped website.
