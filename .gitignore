@@ -4,3 +4,6 @@ output
 __pycache__/
 sentiment_score.py
 credentials.json
+passwords.sh
+append_db.py
+.env
